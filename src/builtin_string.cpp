@@ -584,7 +584,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         { L"all", no_argument, 0, 'a'},
         { L"ignore-case", no_argument, 0, 'i'},
         { L"index", no_argument, 0, 'n'},
-        { L"invert-match", no_argument, 0, 'v'},
+        { L"invert", no_argument, 0, 'v'},
         { L"quiet", no_argument, 0, 'q'},
         { L"regex", no_argument, 0, 'r'},
         { 0, 0, 0, 0 }
