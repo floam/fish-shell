@@ -91,7 +91,7 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
 
         arg += ch;
     }
-    
+
     *storage = str2wcstring(arg);
     return storage->c_str();
 }
@@ -461,6 +461,7 @@ class pcre2_matcher_t: public string_matcher_t
             {
                 streams.out.append(arg);
                 streams.out.push_back(L'\n');
+                return 1;
             }
             return 0;
         }
@@ -477,12 +478,18 @@ class pcre2_matcher_t: public string_matcher_t
             return -1;
         }
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
+
+        if (opts.invert_match)
+            return 0;
+
         for (int j = 0; j < pcre2_rc; j++)
         {
             PCRE2_SIZE begin = ovector[2*j];
             PCRE2_SIZE end = ovector[2*j + 1];
-            if (!opts.quiet && !opts.invert_match)
+
+            if (!opts.quiet)
             {
+
                 if (begin != PCRE2_UNSET && end != PCRE2_UNSET)
                 {
                     if (opts.index)
@@ -1072,7 +1079,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
-    
+
     wcstring_list_t splits;
     size_t arg_count = 0;
     wcstring storage;
@@ -1095,7 +1102,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         }
         arg_count++;
     }
-    
+
     // If we are from the right, split_about gave us reversed strings, in reversed order!
     if (right)
     {
@@ -1105,7 +1112,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         }
         std::reverse(splits.begin(), splits.end());
     }
-    
+
     if (!quiet)
     {
         for (wcstring_list_t::const_iterator si = splits.begin(); si != splits.end(); ++si)
@@ -1301,7 +1308,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
-    
+
     /* if neither left or right is specified, we do both */
     if (! do_left && ! do_right)
     {
@@ -1311,7 +1318,7 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
 
     const wchar_t *arg;
     size_t ntrim = 0;
-    
+
     wcstring argstr;
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0)
