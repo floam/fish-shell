@@ -463,7 +463,7 @@ class pcre2_matcher_t: public string_matcher_t
                 streams.out.push_back(L'\n');
                 return 1;
             }
-            return 0;
+            return 0;test
         }
         if (pcre2_rc < 0)
         {
@@ -477,31 +477,29 @@ class pcre2_matcher_t: public string_matcher_t
             string_error(streams, _(L"%ls: Regular expression internal error\n"), argv0);
             return -1;
         }
-        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
 
         if (opts.invert_match)
             return 0;
+        
+        else
+            PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
 
         for (int j = 0; j < pcre2_rc; j++)
         {
             PCRE2_SIZE begin = ovector[2*j];
-            PCRE2_SIZE end = ovector[2*j + 1];
+            PCRE2_SIZE end = ovector[2*j + 1]
 
-            if (!opts.quiet)
+            if (begin != PCRE2_UNSET && end != PCRE2_UNSET && !opts.quiet)
             {
-
-                if (begin != PCRE2_UNSET && end != PCRE2_UNSET)
+                if (opts.index)
                 {
-                    if (opts.index)
-                    {
-                        streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1), (unsigned long)(end - begin));
-                    }
-                    else if (end > begin) // may have end < begin if \K is used
-                    {
-                        streams.out.append(wcstring(&arg[begin], end - begin));
-                    }
-                    streams.out.push_back(L'\n');
+                    streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1), (unsigned long)(end - begin));
                 }
+                else if (end > begin) // may have end < begin if \K is used
+                {
+                    streams.out.append(wcstring(&arg[begin], end - begin));
+                }
+                streams.out.push_back(L'\n');
             }
         }
         return 1;
