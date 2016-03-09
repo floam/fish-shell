@@ -986,17 +986,26 @@ void completer_t::complete_from_args(const wcstring &str,
                                      complete_flags_t flags)
 {
     bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
-    parser_t parser(is_autosuggest ? PARSER_TYPE_COMPLETIONS_ONLY : PARSER_TYPE_GENERAL, false /* don't show errors */);
 
     /* If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call proc_push_interactive */
     if (! is_autosuggest)
+    {
         proc_push_interactive(0);
+    }
 
+    expand_flags_t eflags = 0;
+    if (is_autosuggest)
+    {
+        eflags |= EXPAND_NO_DESCRIPTIONS | EXPAND_SKIP_CMDSUBST;
+    }
+    
     std::vector<completion_t> possible_comp;
-    parser.expand_argument_list(args, &possible_comp);
+    parser_t::expand_argument_list(args, eflags, &possible_comp);
 
     if (! is_autosuggest)
+    {
         proc_pop_interactive();
+    }
 
     this->complete_strings(escape_string(str, ESCAPE_ALL), desc.c_str(), 0, possible_comp, flags);
 }
@@ -1505,8 +1514,8 @@ bool completer_t::try_complete_variable(const wcstring &str)
     enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
     const size_t len = str.size();
 
-    /* Get the position of the dollar heading a run of valid variable characters. -1 means none. */
-    size_t variable_start = -1;
+    /* Get the position of the dollar heading a (possibly empty) run of valid variable characters. npos means none. */
+    size_t variable_start = wcstring::npos;
 
     for (size_t in_pos=0; in_pos<len; in_pos++)
     {
@@ -1554,9 +1563,11 @@ bool completer_t::try_complete_variable(const wcstring &str)
         }
     }
 
-    /* Now complete if we have a variable start that's also not the last character */
+    /* Now complete if we have a variable start. Note the variable text may be empty; in that case don't generate an autosuggestion, but do allow tab completion */
+    bool allow_empty = ! (this->flags & COMPLETION_REQUEST_AUTOSUGGESTION);
+    bool text_is_empty = (variable_start == len);
     bool result = false;
-    if (variable_start != static_cast<size_t>(-1) && variable_start + 1 < len)
+    if (variable_start != wcstring::npos && (allow_empty || ! text_is_empty))
     {
         result = this->complete_variable(str, variable_start + 1);
     }

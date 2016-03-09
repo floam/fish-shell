@@ -338,7 +338,7 @@ env_var_t env_universal_t::get(const wcstring &name) const
     var_table_t::const_iterator where = vars.find(name);
     if (where != vars.end())
     {
-        result = where->second.val;
+        result = env_var_t(where->second.val);
     }
     return result;
 }
@@ -958,7 +958,7 @@ var_table_t env_universal_t::read_message_internal(int fd)
             // Process it if it's a newline (which is true if we are before the end of the buffer)
             if (cursor < bufflen && ! line.empty())
             {
-                if (utf8_to_wchar_string(line, &wide_line))
+                if (utf8_to_wchar(line.data(), line.size(), &wide_line, 0))
                 {
                     env_universal_t::parse_message_internal(wide_line, &result, &storage);
                 }
@@ -1454,7 +1454,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     }
     
     public:
-    universal_notifier_named_pipe_t(const wchar_t *test_path) : pipe_fd(-1), readback_time_usec(0), readback_amount(0), polling_due_to_readable_fd(false), drain_if_still_readable_time_usec(0)
+    explicit universal_notifier_named_pipe_t(const wchar_t *test_path) : pipe_fd(-1), readback_time_usec(0), readback_amount(0), polling_due_to_readable_fd(false), drain_if_still_readable_time_usec(0)
     {
         make_pipe(test_path);
     }

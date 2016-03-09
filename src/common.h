@@ -35,33 +35,58 @@
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;
 
-/**
-   Maximum number of bytes used by a single utf-8 character
-*/
+// Maximum number of bytes used by a single utf-8 character.
 #define MAX_UTF8_BYTES 6
 
-/**
-   This is in the unicode private use area.
-*/
-#define ENCODE_DIRECT_BASE 0xf100
-
-/**
-  Highest legal ascii value
-*/
+// Highest legal ASCII value.
 #define ASCII_MAX 127u
 
-/**
-  Highest legal 16-bit unicode value
-*/
-#define UCS2_MAX 0xffffu
+// Highest legal 16-bit Unicode value.
+#define UCS2_MAX 0xFFFFu
 
-/**
-  Highest legal byte value
-*/
-#define BYTE_MAX 0xffu
+// Highest legal byte value.
+#define BYTE_MAX 0xFFu
 
-/** BOM value */
+// Unicode BOM value.
 #define UTF8_BOM_WCHAR 0xFEFFu
+
+// Unicode replacement character.
+#define REPLACEMENT_WCHAR 0xFFFDu
+
+// Use Unicode "noncharacters" for internal characters as much as we can. This
+// gives us 32 "characters" for internal use that we can guarantee should not
+// appear in our input stream. See http://www.unicode.org/faq/private_use.html.
+#define RESERVED_CHAR_BASE 0xFDD0u
+#define RESERVED_CHAR_END  0xFDF0u
+// Split the available noncharacter values into two ranges to ensure there are
+// no conflicts among the places we use these special characters.
+#define EXPAND_RESERVED_BASE RESERVED_CHAR_BASE
+#define EXPAND_RESERVED_END  (EXPAND_RESERVED_BASE + 16)
+#define WILDCARD_RESERVED_BASE EXPAND_RESERVED_END
+#define WILDCARD_RESERVED_END  (WILDCARD_RESERVED_BASE + 16)
+// Make sure the ranges defined above don't exceed the range for noncharacters.
+// This is to make sure we didn't do something stupid in subdividing the
+// Unicode range for our needs.
+#if WILDCARD_RESERVED_END > RESERVED_CHAR_END
+#error
+#endif
+
+// These are in the Unicode private-use range. We really shouldn't use this
+// range but have little choice in the matter given how our lexer/parser works.
+// We can't use non-characters for these two ranges because there are only 66 of
+// them and we need at least 256 + 64.
+//
+// If sizeof(wchar_t))==4 we could avoid using private-use chars; however, that
+// would result in fish having different behavior on machines with 16 versus 32
+// bit wchar_t. It's better that fish behave the same on both types of systems.
+//
+// Note: We don't use the highest 8 bit range (0xF800 - 0xF8FF) because we know
+// of at least one use of a codepoint in that range: the Apple symbol (0xF8FF)
+// on Mac OS X. See http://www.unicode.org/faq/private_use.html.
+#define ENCODE_DIRECT_BASE 0xF600u
+#define ENCODE_DIRECT_END  (ENCODE_DIRECT_BASE + 256)
+#define INPUT_COMMON_BASE  0xF700u
+#define INPUT_COMMON_END   (INPUT_COMMON_BASE + 64)
 
 /* Flags for unescape_string functions */
 enum
@@ -357,7 +382,7 @@ struct string_fuzzy_match_t
     size_t match_distance_second;
 
     /* Constructor */
-    string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0, size_t distance_second = 0);
+    explicit string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0, size_t distance_second = 0);
 
     /* Return -1, 0, 1 if this match is (respectively) better than, equal to, or worse than rhs */
     int compare(const string_fuzzy_match_t &rhs) const;
@@ -395,6 +420,9 @@ void debug_safe(int level, const char *msg, const char *param1 = NULL, const cha
 /** Writes out a long safely */
 void format_long_safe(char buff[64], long val);
 void format_long_safe(wchar_t buff[64], long val);
+
+/** "Narrows" a wide character string. This just grabs any ASCII characters and trunactes. */
+void narrow_string_safe(char buff[64], const wchar_t *s);
 
 
 template<typename T>
@@ -450,6 +478,17 @@ inline wcstring to_string(const int &x)
     return to_string(static_cast<long>(x));
 }
 
+/* A hackish thing to simulate rvalue references in C++98.
+   The idea is that you can define a constructor to take a moved_ref<T> and then swap() out of it.
+ */
+template<typename T>
+struct moved_ref
+{
+    T &val;
+    
+    explicit moved_ref(T &v) : val(v) { }
+};
+
 wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
 char **make_null_terminated_array(const std::vector<std::string> &lst);
 
@@ -486,7 +525,7 @@ class null_terminated_array_t
 
 public:
     null_terminated_array_t() : array(NULL) { }
-    null_terminated_array_t(const string_list_t &argv) : array(make_null_terminated_array(argv))
+    explicit null_terminated_array_t(const string_list_t &argv) : array(make_null_terminated_array(argv))
     {
     }
 
@@ -514,36 +553,6 @@ public:
 
 /* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr, null_terminated_array_t<char> *output);
-
-/* Helper class to cache a narrow version of a wcstring in a malloc'd buffer, so that we can read it after fork() */
-class narrow_string_rep_t
-{
-private:
-    const char *str;
-
-    /* No copying */
-    narrow_string_rep_t &operator=(const narrow_string_rep_t &);
-    narrow_string_rep_t(const narrow_string_rep_t &x);
-
-public:
-    ~narrow_string_rep_t()
-    {
-        free((void *)str);
-    }
-
-    narrow_string_rep_t() : str(NULL) {}
-
-    void set(const wcstring &s)
-    {
-        free((void *)str);
-        str = wcs2str(s.c_str());
-    }
-
-    const char *get() const
-    {
-        return str;
-    }
-};
 
 bool is_forked_child();
 
@@ -576,8 +585,8 @@ class scoped_lock
 public:
     void lock(void);
     void unlock(void);
-    scoped_lock(pthread_mutex_t &mutex);
-    scoped_lock(mutex_lock_t &lock);
+    explicit scoped_lock(pthread_mutex_t &mutex);
+    explicit scoped_lock(mutex_lock_t &lock);
     ~scoped_lock();
 };
 
@@ -607,7 +616,7 @@ class scoped_rwlock
 
     /* No copying */
     scoped_rwlock &operator=(const scoped_lock &);
-    scoped_rwlock(const scoped_lock &);
+    explicit scoped_rwlock(const scoped_lock &);
 
 public:
     void lock(void);
@@ -619,8 +628,8 @@ public:
        equivalent to `lock.unlock_shared(); lock.lock();`
      */
     void upgrade(void);
-    scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
-    scoped_rwlock(rwlock_t &rwlock, bool shared = false);
+    explicit scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
+    explicit scoped_rwlock(rwlock_t &rwlock, bool shared = false);
     ~scoped_rwlock();
 };
 
@@ -639,7 +648,7 @@ class scoped_push
     bool restored;
 
 public:
-    scoped_push(T *r): ref(r), saved_value(*r), restored(false)
+    explicit scoped_push(T *r): ref(r), saved_value(*r), restored(false)
     {
     }
 

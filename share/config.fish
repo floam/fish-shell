@@ -165,3 +165,43 @@ for file in $configdir/fish/conf.d/* $__fish_sysconfdir/conf.d/* $__fish_datadir
 	# This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd)
 	[ -f $file -a -r $file ]; and source $file
 end
+
+# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax
+# This needs to be in share/config.fish because __fish_config_interactive is called after sourcing config.fish, which might contain abbr calls
+if not set -q __fish_init_2_3_0
+	set -l fab
+	for abb in $fish_user_abbreviations
+		set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abb)
+	end
+	set fish_user_abbreviations $fab
+	set -U __fish_init_2_3_0
+end
+
+#
+# Some things should only be done for login terminals
+# This used to be in etc/config.fish - keep it here to keep the semantics
+#
+
+if status --is-login
+
+	# Check for i18n information in
+	# /etc/sysconfig/i18n
+
+	if test -f /etc/sysconfig/i18n
+		string match -r '^[a-zA-Z]*=.*' < /etc/sysconfig/i18n | while read -l line
+			set -gx (string split '=' -m 1 -- $line | string replace -ra '"([^"]+)"' '$1' | string replace -ra "'([^']+)'" '$1')
+		end
+	end
+
+	#
+	# Put linux consoles in unicode mode.
+	#
+
+	if test "$TERM" = linux
+		if string match -qir '\.UTF' -- $LANG
+			if command -s unicode_start >/dev/null
+				unicode_start
+			end
+		end
+	end
+end

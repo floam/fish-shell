@@ -14,6 +14,7 @@
 #include "parse_tree.h"
 #include "io.h"
 #include "parse_constants.h"
+#include "expand.h"
 
 #include <vector>
 
@@ -84,7 +85,7 @@ struct block_t
 {
 protected:
     /** Protected constructor. Use one of the subclasses below. */
-    block_t(block_type_t t);
+    explicit block_t(block_type_t t);
 
 private:
     const block_type_t block_type; /**< Type of block. */
@@ -133,7 +134,7 @@ struct if_block_t : public block_t
 struct event_block_t : public block_t
 {
     event_t const event;
-    event_block_t(const event_t &evt);
+    explicit event_block_t(const event_t &evt);
 };
 
 struct function_block_t : public block_t
@@ -146,7 +147,7 @@ struct function_block_t : public block_t
 struct source_block_t : public block_t
 {
     const wchar_t * const source_file;
-    source_block_t(const wchar_t *src);
+    explicit source_block_t(const wchar_t *src);
 };
 
 struct for_block_t : public block_t
@@ -171,7 +172,7 @@ struct fake_block_t : public block_t
 
 struct scope_block_t : public block_t
 {
-    scope_block_t(block_type_t type); //must be BEGIN, TOP or SUBST
+    explicit scope_block_t(block_type_t type); //must be BEGIN, TOP or SUBST
 };
 
 struct breakpoint_block_t : public block_t
@@ -202,15 +203,6 @@ enum parser_error
     CMDSUBST_ERROR,
 };
 
-enum parser_type_t
-{
-    PARSER_TYPE_NONE,
-    PARSER_TYPE_GENERAL,
-    PARSER_TYPE_FUNCTIONS_ONLY,
-    PARSER_TYPE_COMPLETIONS_ONLY,
-    PARSER_TYPE_ERRORS_ONLY
-};
-
 struct profile_item_t
 {
     /** Time spent executing the specified command, including parse time for nested blocks. */
@@ -236,11 +228,6 @@ class parser_t
 {
     friend class parse_execution_context_t;
 private:
-    enum parser_type_t parser_type;
-
-    /** Whether or not we output errors */
-    const bool show_errors;
-
     /** Indication that we should skip all blocks */
     bool cancellation_requested;
 
@@ -293,8 +280,8 @@ public:
     */
     static void skip_all_blocks();
 
-    /** Create a parser of the given type */
-    parser_t(enum parser_type_t type, bool show_errors);
+    /** Create a parser */
+    parser_t();
 
     /** Global event blocks */
     event_blockage_list_t global_event_blocks;
@@ -309,6 +296,11 @@ public:
       \return 0 on success, 1 otherwise
     */
     int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
+    
+    /**
+       Evaluate the expressions contained in cmd, which has been parsed into the given parse tree. This takes ownership of the tree.
+     */
+    int eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type, moved_ref<parse_node_tree_t> t);
 
     /** Evaluates a block node at the given node offset in the topmost execution context */
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
@@ -319,9 +311,10 @@ public:
       Errors are ignored.
 
       \param arg_src String to evaluate as an argument list
+      \param flags Some expand flags to use
       \param output List to insert output into
     */
-    void expand_argument_list(const wcstring &arg_src, std::vector<completion_t> *output);
+    static void expand_argument_list(const wcstring &arg_src, expand_flags_t flags, std::vector<completion_t> *output);
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

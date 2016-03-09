@@ -66,7 +66,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level), executing_node_idx(NODE_OFFSET_INVALID), cached_lineno_offset(0), cached_lineno_count(0)
+parse_execution_context_t::parse_execution_context_t(moved_ref<parse_node_tree_t> t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level), executing_node_idx(NODE_OFFSET_INVALID), cached_lineno_offset(0), cached_lineno_count(0)
 {
 }
 
@@ -720,28 +720,25 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 /* Reports an error. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
 parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...) const
 {
-    if (parser->show_errors)
-    {
-        /* Create an error */
-        parse_error_list_t error_list = parse_error_list_t(1);
-        parse_error_t *error = &error_list.at(0);
-        error->source_start = node.source_start;
-        error->source_length = node.source_length;
-        error->code = parse_error_syntax; //hackish
+    /* Create an error */
+    parse_error_list_t error_list = parse_error_list_t(1);
+    parse_error_t *error = &error_list.at(0);
+    error->source_start = node.source_start;
+    error->source_length = node.source_length;
+    error->code = parse_error_syntax; //hackish
 
-        va_list va;
-        va_start(va, fmt);
-        error->text = vformat_string(fmt, va);
-        va_end(va);
+    va_list va;
+    va_start(va, fmt);
+    error->text = vformat_string(fmt, va);
+    va_end(va);
 
-        this->report_errors(error_list);
-    }
+    this->report_errors(error_list);
     return parse_execution_errored;
 }
 
 parse_execution_result_t parse_execution_context_t::report_errors(const parse_error_list_t &error_list) const
 {
-    if (parser->show_errors && ! parser->cancellation_requested)
+    if (! parser->cancellation_requested)
     {
         if (error_list.empty())
         {
@@ -971,6 +968,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
     /* Get all argument nodes underneath the statement. We guess we'll have that many arguments (but may have more or fewer, if there are wildcards involved) */
     const parse_node_tree_t::parse_node_list_t argument_nodes = tree.find_nodes(parent, symbol_argument);
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
+    std::vector<completion_t> arg_expanded;
     for (size_t i=0; i < argument_nodes.size(); i++)
     {
         const parse_node_t &arg_node = *argument_nodes.at(i);
@@ -980,8 +978,8 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
         const wcstring arg_str = arg_node.get_source(src);
 
         /* Expand this string */
-        std::vector<completion_t> arg_expanded;
         parse_error_list_t errors;
+        arg_expanded.clear();
         int expand_ret = expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
         parse_error_offset_source_start(&errors, arg_node.source_start);
         switch (expand_ret)
@@ -1010,10 +1008,14 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
             }
         }
 
-        /* Now copy over any expanded arguments */
-        for (size_t i=0; i < arg_expanded.size(); i++)
+        /* Now copy over any expanded arguments. Do it using swap() to avoid extra allocations; this is called very frequently. */
+        size_t old_arg_count = out_arguments->size();
+        size_t new_arg_count = arg_expanded.size();
+        out_arguments->resize(old_arg_count + new_arg_count);
+        for (size_t i=0; i < new_arg_count; i++)
         {
-            out_arguments->push_back(arg_expanded.at(i).completion);
+            wcstring &new_arg = arg_expanded.at(i).completion;
+            out_arguments->at(old_arg_count + i).swap(new_arg);
         }
     }
 

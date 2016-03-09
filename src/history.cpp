@@ -129,7 +129,7 @@ class time_profiler_t
     double start;
 public:
 
-    time_profiler_t(const char *w)
+    explicit time_profiler_t(const char *w)
     {
         if (LOG_TIMES)
         {
@@ -165,7 +165,7 @@ class history_lru_node_t : public lru_node_t
 public:
     time_t timestamp;
     path_list_t required_paths;
-    history_lru_node_t(const history_item_t &item) :
+    explicit history_lru_node_t(const history_item_t &item) :
         lru_node_t(item.str()),
         timestamp(item.timestamp()),
         required_paths(item.required_paths)
@@ -183,7 +183,7 @@ protected:
     }
 
 public:
-    history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) { }
+    explicit history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) { }
 
     /* Function to add a history item */
     void add_item(const history_item_t &item)
@@ -1690,10 +1690,10 @@ void history_t::populate_from_config_path()
             int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, 0644);
 
             char buf[BUFSIZ];
-            size_t size;
+            ssize_t size;
             while ((size = read(src_fd, buf, BUFSIZ)) > 0) {
-                ssize_t written = write(dst_fd, buf, size);
-                if (written == -1) {
+                ssize_t written = write(dst_fd, buf, static_cast<size_t>(size));
+                if (written < 0) {
                     /*
                       This message does not have high enough priority to
                       be shown by default.

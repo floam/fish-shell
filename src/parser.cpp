@@ -162,9 +162,7 @@ static wcstring user_presentable_path(const wcstring &path)
 }
 
 
-parser_t::parser_t(enum parser_type_t type, bool errors) :
-    parser_type(type),
-    show_errors(errors),
+parser_t::parser_t() :
     cancellation_requested(false),
     is_within_fish_initialization(false)
 {
@@ -177,7 +175,7 @@ parser_t &parser_t::principal_parser(void)
 {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
-    static parser_t parser(PARSER_TYPE_GENERAL, true);
+    static parser_t parser;
     if (! s_principal_parser)
     {
         s_principal_parser = &parser;
@@ -467,20 +465,9 @@ void parser_t::emit_profiling(const char *path) const
     }
 }
 
-void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<completion_t> *output_arg_list)
+void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags, std::vector<completion_t> *output_arg_list)
 {
     assert(output_arg_list != NULL);
-    expand_flags_t eflags = 0;
-    if (! show_errors)
-        eflags |= EXPAND_NO_DESCRIPTIONS;
-    if (this->parser_type != PARSER_TYPE_GENERAL)
-        eflags |= EXPAND_SKIP_CMDSUBST;
-
-    /* Suppress calling proc_push_interactive off of the main thread. */
-    if (this->parser_type == PARSER_TYPE_GENERAL)
-    {
-        proc_push_interactive(0);
-    }
 
     /* Parse the string as an argument list */
     parse_node_tree_t tree;
@@ -508,11 +495,6 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<co
                 break;
             }
         }
-    }
-
-    if (this->parser_type == PARSER_TYPE_GENERAL)
-    {
-        proc_pop_interactive();
     }
 }
 
@@ -831,57 +813,52 @@ profile_item_t *parser_t::create_profile_item()
     return result;
 }
 
-
 int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
 {
-    CHECK_BLOCK(1);
-
-    if (block_type != TOP && block_type != SUBST)
-    {
-        debug(1, INVALID_SCOPE_ERR_MSG, parser_t::get_block_desc(block_type));
-        bugreport();
-        return 1;
-    }
-
     /* Parse the source into a tree, if we can */
     parse_node_tree_t tree;
     parse_error_list_t error_list;
-    if (! parse_tree_from_string(cmd, parse_flag_none, &tree, this->show_errors ? &error_list : NULL))
+    if (! parse_tree_from_string(cmd, parse_flag_none, &tree, &error_list))
     {
-        if (this->show_errors)
-        {
-            /* Get a backtrace */
-            wcstring backtrace_and_desc;
-            this->get_backtrace(cmd, error_list, &backtrace_and_desc);
-
-            /* Print it */
-            fprintf(stderr, "%ls", backtrace_and_desc.c_str());
-        }
-
+        /* Get a backtrace. This includes the message. */
+        wcstring backtrace_and_desc;
+        this->get_backtrace(cmd, error_list, &backtrace_and_desc);
+        
+        /* Print it */
+        fprintf(stderr, "%ls", backtrace_and_desc.c_str());
+        
         return 1;
+    }
+    return this->eval_acquiring_tree(cmd, io, block_type, moved_ref<parse_node_tree_t>(tree));
+}
+
+int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type, moved_ref<parse_node_tree_t> tree)
+{
+    CHECK_BLOCK(1);
+    assert(block_type == TOP || block_type == SUBST);
+
+    if (tree.val.empty())
+    {
+        return 0;
     }
 
     //print_stderr(block_stack_description());
-
-
+    
     /* Determine the initial eval level. If this is the first context, it's -1; otherwise it's the eval level of the top context. This is sort of wonky because we're stitching together a global notion of eval level from these separate objects. A better approach would be some profile object that all contexts share, and that tracks the eval levels on its own. */
     int exec_eval_level = (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
-
+    
     /* Append to the execution context stack */
     parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this, exec_eval_level);
     execution_contexts.push_back(ctx);
-
+    
     /* Execute the first node */
-    if (! tree.empty())
-    {
-        this->eval_block_node(0, io, block_type);
-    }
-
+    this->eval_block_node(0, io, block_type);
+    
     /* Clean up the execution context stack */
     assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
     execution_contexts.pop_back();
     delete ctx;
-
+    
     return 0;
 }
 

@@ -57,11 +57,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "output.h"
 
 /**
-   Size of message buffer
-*/
-#define MESS_SIZE 256
-
-/**
    Size of buffer for reading buffered output
 */
 #define BUFFER_SIZE 4096
@@ -354,8 +349,6 @@ int job_signal(job_t *j, int signal)
 
 /**
    Store the status of the process pid that was returned by waitpid.
-   Return 0 if all went well, nonzero otherwise.
-   This is called from a signal handler.
 */
 static void mark_process_status(const job_t *j, process_t *p, int status)
 {
@@ -374,18 +367,7 @@ static void mark_process_status(const job_t *j, process_t *p, int status)
     {
         /* This should never be reached */
         p->completed = 1;
-
-        char mess[MESS_SIZE];
-        snprintf(mess,
-                 MESS_SIZE,
-                 "Process %ld exited abnormally\n",
-                 (long) p->pid);
-        /*
-          If write fails, do nothing. We're in a signal handlers error
-          handler. If things aren't working properly, it's safer to
-          give up.
-         */
-        write_ignore(2, mess, strlen(mess));
+        fprintf(stderr, "Process %ld exited abnormally\n", (long)p->pid);
     }
 }
 
@@ -399,10 +381,8 @@ void job_mark_process_as_failed(const job_t *job, process_t *p)
 }
 
 /**
-   Handle status update for child \c pid. This function is called by
-   the signal handler, so it mustn't use malloc or any such hitech
-   nonsense.
-
+   Handle status update for child \c pid.
+ 
    \param pid the pid of the process whose status changes
    \param status the status as returned by wait
 */
@@ -411,14 +391,6 @@ static void handle_child_status(pid_t pid, int status)
     bool found_proc = false;
     const job_t *j = NULL;
     process_t *p = NULL;
-//	char mess[MESS_SIZE];
-    /*
-      snprintf( mess,
-      MESS_SIZE,
-      "Process %d\n",
-      (int) pid );
-      write( 2, mess, strlen(mess ));
-    */
 
     job_iterator_t jobs;
     while (! found_proc && (j = jobs.next()))
@@ -428,25 +400,11 @@ static void handle_child_status(pid_t pid, int status)
         {
             if (pid == p->pid)
             {
-                /*				snprintf( mess,
-                  MESS_SIZE,
-                  "Process %d is %ls from job %ls\n",
-                  (int) pid, p->actual_cmd, j->command );
-                  write( 2, mess, strlen(mess ));
-                */
-
                 mark_process_status(j, p, status);
                 if (p->completed && prev != 0)
                 {
                     if (!prev->completed && prev->pid)
                     {
-                        /*					snprintf( mess,
-                          MESS_SIZE,
-                          "Kill previously uncompleted process %ls (%d)\n",
-                          prev->actual_cmd,
-                          prev->pid );
-                          write( 2, mess, strlen(mess ));
-                        */
                         kill(prev->pid,SIGPIPE);
                     }
                 }
@@ -490,23 +448,13 @@ static void handle_child_status(pid_t pid, int status)
            There have been bugs in both subshell handling and in
            builtin handling that have caused this previously...
         */
-        /*		snprintf( mess,
-          MESS_SIZE,
-          "Process %d not found by %d\n",
-          (int) pid, (int)getpid() );
-
-          write( 2, mess, strlen(mess ));
-        */
     }
     return;
 }
 
 process_t::process_t() :
-    argv_array(),
-    argv0_narrow(),
-    type(),
+    type(), // gets set later
     internal_block_node(NODE_OFFSET_INVALID),
-    actual_cmd(),
     pid(0),
     pipe_write_fd(0),
     pipe_read_fd(0),
@@ -529,8 +477,6 @@ process_t::~process_t()
 }
 
 job_t::job_t(job_id_t jobid, const io_chain_t &bio) :
-    command_str(),
-    command_narrow(),
     block_io(bio),
     first_process(NULL),
     pgid(0),
