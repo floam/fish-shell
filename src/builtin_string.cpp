@@ -463,31 +463,31 @@ class pcre2_matcher_t: public string_matcher_t
                 streams.out.push_back(L'\n');
                 return 1;
             }
-            return 0;test
+            else 
+                return 0;
         }
-        if (pcre2_rc < 0)
+        else if (pcre2_rc < 0)
         {
             string_error(streams, _(L"%ls: Regular expression match error: %ls\n"),
                     argv0, pcre2_strerror(pcre2_rc).c_str());
             return -1;
         }
-        if (pcre2_rc == 0)
+        else if (pcre2_rc == 0)
         {
             // The output vector wasn't big enough. Should not happen.
             string_error(streams, _(L"%ls: Regular expression internal error\n"), argv0);
             return -1;
         }
 
-        if (opts.invert_match)
+        else if (opts.invert_match)
             return 0;
-        
-        else
-            PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
+
+        PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
 
         for (int j = 0; j < pcre2_rc; j++)
         {
             PCRE2_SIZE begin = ovector[2*j];
-            PCRE2_SIZE end = ovector[2*j + 1]
+            PCRE2_SIZE end = ovector[2*j + 1];
 
             if (begin != PCRE2_UNSET && end != PCRE2_UNSET && !opts.quiet)
             {
