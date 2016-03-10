@@ -319,7 +319,6 @@ size_t escape_code_length(const wchar_t *code)
         if (code[1] >= L'@' && code[1] <= L'_')
         {
             resulting_length = 2;
-            found = true;
         }
     }
 

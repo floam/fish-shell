@@ -350,14 +350,9 @@ static bool wildcard_complete_internal(const wchar_t *str,
             case ANY_CHAR:
             {
                 if (str[0] == L'\0')
-                {
                     return false;
-                }
                 else
-                {
                     return wildcard_complete_internal(str + 1, wc + 1, params, flags, out);
-                }
-                break;
             }
                 
             case ANY_STRING:

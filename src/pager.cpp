@@ -149,9 +149,9 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         {
             written += print_max(L" ", packed_color, 1, false, &line_data);
         }
-        written += print_max(L"(", packed_color, 1, false, &line_data);
-        written += print_max(c->desc, packed_color, desc_width, false, &line_data);
-        written += print_max(L")", packed_color, 1, false, &line_data);
+        print_max(L"(", packed_color, 1, false, &line_data);
+        print_max(c->desc, packed_color, desc_width, false, &line_data);
+        print_max(L")", packed_color, 1, false, &line_data);
     }
     else
     {
@@ -297,7 +297,7 @@ static void join_completions(comp_info_list_t *comps)
 }
 
 /** Generate a list of comp_t structures from a list of completions */
-static comp_info_list_t process_completions_into_infos(const completion_list_t &lst, const wcstring &prefix)
+static comp_info_list_t process_completions_into_infos(const completion_list_t &lst)
 {
     const size_t lst_size = lst.size();
 
@@ -397,7 +397,7 @@ void pager_t::refilter_completions()
 void pager_t::set_completions(const completion_list_t &raw_completions)
 {
     // Get completion infos out of it
-    unfiltered_completion_infos = process_completions_into_infos(raw_completions, prefix);
+    unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
     // Maybe join them
     if (prefix == L"-")
@@ -598,7 +598,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
 
             /* We limit the width to term_width - 1 */
             int search_field_written = print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal, term_width - 1, false, search_field);
-            search_field_written += print_max(search_field_text, highlight_modifier_force_underline, term_width - search_field_written - 1, false, search_field);
+            print_max(search_field_text, highlight_modifier_force_underline, term_width - search_field_written - 1, false, search_field);
         }
 
     }
@@ -712,7 +712,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
     }
 
     /* Ok, we had something selected already. Select something different. */
-    size_t new_selected_completion_idx = selected_completion_idx;
+    size_t new_selected_completion_idx;
     if (! selection_direction_is_cardinal(direction))
     {
         /* Next, previous, or deselect, all easy */

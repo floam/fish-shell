@@ -3524,7 +3524,8 @@ const wchar_t *reader_readline(int nchars)
                 editable_line_t *el = &data->command_line;
 
                 /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #613) and not in a comment (#1255). */
-                if (is_backslashed(el->text, el->position))
+            
+                if (el != NULL && is_backslashed(el->text, el->position))
                 {
                     bool continue_on_next_line = false;
                     if (el->position >= el->size())

@@ -733,7 +733,7 @@ void format_long_safe(char buff[64], long val)
 {
     if (val == 0)
     {
-        strcpy(buff, "0");
+        strncpy(buff, "0", 64 - 1);
     }
     else
     {
@@ -854,7 +854,7 @@ wcstring reformat_for_screen(const wcstring &msg)
             */
             if (pos == start)
             {
-                start = pos = pos+1;
+                pos++;
             }
             else if (overflow)
             {
@@ -891,7 +891,7 @@ wcstring reformat_for_screen(const wcstring &msg)
             {
                 break;
             }
-
+        
             start=pos;
         }
     }
