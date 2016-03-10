@@ -339,7 +339,7 @@ public:
 
         if (opts.ignore_case)
         {
-            for (int i = 0; i < wcpattern.length(); i++)
+            for (size_t i = 0; i < wcpattern.length(); i++)
             {
                 wcpattern[i] = towlower(wcpattern[i]);
             }
@@ -356,7 +356,7 @@ public:
         if (opts.ignore_case)
         {
             wcstring s = arg;
-            for (int i = 0; i < s.length(); i++)
+            for (size_t i = 0; i < s.length(); i++)
             {
                 s[i] = towlower(s[i]);
             }
@@ -1104,9 +1104,9 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     // If we are from the right, split_about gave us reversed strings, in reversed order!
     if (right)
     {
-        for (size_t i=0; i < splits.size(); i++)
+        for (size_t j = 0; j < splits.size(); j++)
         {
-            std::reverse(splits[i].begin(), splits[i].end());
+            std::reverse(splits[j].begin(), splits[j].end());
         }
         std::reverse(splits.begin(), splits.end());
     }
