@@ -15,7 +15,7 @@ complete -x -c ssh -d Hostname -a "
 "
 
 complete -x -c ssh -d User -a "
-(__fish_print_users | __fish_sgrep -v '^_')@
+(__fish_print_users | string match -r -v '^_')@
 "
 complete -c ssh --description "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
 
