@@ -21,7 +21,7 @@ function __fish_complete_wvdial_peers --description 'Complete wvdial peers' --ar
 
 	for file in $cfgfiles
         if test -f $file
-            string match -a '\*\[Dialer\*' < $file | sed 's/\[Dialer \(.\+\)\]/\1/'
+            string match -r '\[Dialer' < $file | string replace -r '\[Dialer (.+)\]' '$1'
         end
 	end | sort -u | string match -v Defaults
 
