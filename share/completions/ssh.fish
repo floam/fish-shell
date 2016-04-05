@@ -23,7 +23,7 @@ complete -c ssh -s a --description "Disables forwarding of the authentication ag
 complete -c ssh -s A --description "Enables forwarding of the authentication agent"
 complete -x -c ssh -s b --description "Interface to transmit from" -a "
 (
-	cat /proc/net/arp ^/dev/null| __fish_sgrep -v '^IP'|cut -d ' ' -f 1 ^/dev/null
+	cat /proc/net/arp ^/dev/null| string match -r -v '^IP'|cut -d ' ' -f 1 ^/dev/null
 )
 "
 
