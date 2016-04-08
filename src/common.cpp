@@ -577,13 +577,13 @@ bool contains_internal(const wchar_t *a, int vararg_handle, ...)
 }
 
 /* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t *. vararg_handle exists only to give us a POD-value to pass to va_start */
-__sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...)
+__sentinel bool contains_internal(const wcstring *needle, int vararg_handle, ...)
 {
     const wchar_t *arg;
     va_list va;
     int res = 0;
 
-    const wchar_t *needle_cstr = needle.c_str();
+    const wchar_t * needle_cstr = needle->c_str();
     va_start(va, vararg_handle);
     while ((arg=va_arg(va, const wchar_t *))!= 0)
     {

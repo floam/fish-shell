@@ -48,7 +48,7 @@ bool path_get_data(wcstring &path);
    \param vars The environment variables snapshot to use
    \return 0 if the command can not be found, the path of the command otherwise. The result should be freed with free().
 */
-bool path_get_path(const wcstring &cmd,
+bool path_get_path(const wcstring *cmd,
                    wcstring *output_or_NULL,
                    const env_vars_snapshot_t &vars = env_vars_snapshot_t::current());
 

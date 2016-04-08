@@ -11,7 +11,7 @@ Functions having to do with parser keywords, like testing if a function is a blo
 
 bool parser_keywords_skip_arguments(const wcstring &cmd)
 {
-    return contains(cmd,
+    return contains(&cmd,
                     L"else",
                     L"begin");
 }
@@ -21,7 +21,7 @@ bool parser_keywords_is_subcommand(const wcstring &cmd)
 {
 
     return parser_keywords_skip_arguments(cmd) ||
-           contains(cmd,
+           contains(&cmd,
                     L"command",
                     L"builtin",
                     L"while",
@@ -35,7 +35,7 @@ bool parser_keywords_is_subcommand(const wcstring &cmd)
 
 bool parser_keywords_is_block(const wcstring &word)
 {
-    return contains(word,
+    return contains(&word,
                     L"for",
                     L"while",
                     L"if",
@@ -48,7 +48,7 @@ bool parser_keywords_is_reserved(const wcstring &word)
 {
     return parser_keywords_is_block(word) ||
            parser_keywords_is_subcommand(word) ||
-           contains(word,
+           contains(&word,
                     L"end",
                     L"case",
                     L"else",

@@ -368,19 +368,19 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         const char *line_start = begin + cursor;
 
         /* Advance the cursor to the next line */
-        const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
-        if (newline == NULL)
+        const char *new_line = (const char *)memchr(line_start, '\n', mmap_length - cursor);
+        if (new_line == NULL)
             break;
 
         /* Advance the cursor past this line. +1 is for the newline */
-        cursor = newline - begin + 1;
+        cursor = new_line - begin + 1;
 
         /* Skip lines with a leading space, since these are in the interior of one of our items */
         if (line_start[0] == ' ')
             continue;
 
         /* Skip very short lines to make one of the checks below easier */
-        if (newline - line_start < 3)
+        if (new_line - line_start < 3)
             continue;
 
         /* Try to be a little YAML compatible. Skip lines with leading %, ---, or ... */
@@ -393,7 +393,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         /* Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:". */
         const char *double_cmd = "- cmd: - cmd: ";
         const size_t double_cmd_len = strlen(double_cmd);
-        while (newline - line_start > double_cmd_len && ! memcmp(line_start, double_cmd, double_cmd_len))
+        while (new_line - line_start > double_cmd_len && ! memcmp(line_start, double_cmd, double_cmd_len))
         {
             /* Skip over just one of the - cmd. In the end there will be just one left. */
             line_start += strlen("- cmd: ");
@@ -402,7 +402,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         /* Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when: 123456". Ignore those. */
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = strlen(cmd_when);
-        if (newline - line_start >= cmd_when_len && ! memcmp(line_start, cmd_when, cmd_when_len))
+        if (new_line - line_start >= cmd_when_len && ! memcmp(line_start, cmd_when, cmd_when_len))
             continue;
 
 
@@ -761,14 +761,14 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     /* Locate the newline */
     assert(cursor <= len);
     const char *start = base + cursor;
-    const char *newline = (char *)memchr(start, '\n', len - cursor);
-    if (newline != NULL)
+    const char *new_line = (char *)memchr(start, '\n', len - cursor);
+    if (new_line != NULL)
     {
         /* We found a newline. */
         result.assign(start, newline - start);
 
         /* Return the amount to advance the cursor; skip over the newline */
-        return newline - start + 1;
+        return new_line - start + 1;
     }
     else
     {
@@ -1769,9 +1769,9 @@ void history_t::populate_from_bash(FILE *stream)
             if (success)
             {
                 /* Skip the newline */
-                char *newline = strchr(buff, '\n');
-                if (newline) *newline = '\0';
-                has_newline = (newline != NULL);
+                char *new_line = strchr(buff, '\n');
+                if (new_line) *new_line = '\0';
+                has_newline = (new_line != NULL);
 
                 /* Append what we've got */
                 line.append(buff);
@@ -1932,7 +1932,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str)
             wcstring command;
             tree.command_for_plain_statement(node, str, &command);
             unescape_string_in_place(&command, UNESCAPE_DEFAULT);
-            if (contains(command, L"exit", L"reboot"))
+            if (contains(&command, L"exit", L"reboot"))
             {
                 impending_exit = true;
             }

@@ -35,10 +35,10 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
         // Look for a newline prior to source_start. If we don't find one, start at the beginning of the string; otherwise start one past the newline. Note that source_start may itself point at a newline; we want to find the newline before it.
         if (source_start > 0)
         {
-            size_t newline = src.find_last_of(L'\n', source_start - 1);
-            if (newline != wcstring::npos)
+            size_t new_line = src.find_last_of(L'\n', source_start - 1);
+            if (new_line != wcstring::npos)
             {
-                line_start = newline + 1;
+                line_start = new_line + 1;
             }
         }
 
@@ -669,31 +669,31 @@ public:
 void parse_ll_t::dump_stack(void) const
 {
     // Walk backwards from the top, looking for parents
-    wcstring_list_t lines;
+    wcstring_list_t walk_lines;
     if (symbol_stack.empty())
     {
-        lines.push_back(L"(empty)");
+        walk_lines.push_back(L"(empty)");
     }
     else
     {
         node_offset_t child = symbol_stack.back().node_idx;
         node_offset_t cursor = child;
-        lines.push_back(nodes.at(cursor).describe());
+        walk_lines.push_back(nodes.at(cursor).describe());
         while (cursor--)
         {
             const parse_node_t &node = nodes.at(cursor);
             if (node.child_start <= child && node.child_start + node.child_count > child)
             {
-                lines.push_back(node.describe());
+                walk_lines.push_back(node.describe());
                 child = cursor;
             }
         }
     }
 
     fprintf(stderr, "Stack dump (%lu elements):\n", symbol_stack.size());
-    for (size_t idx = 0; idx < lines.size(); idx++)
+    for (size_t idx = 0; idx < walk_lines.size(); idx++)
     {
-        fprintf(stderr, "    %ls\n", lines.at(idx).c_str());
+        fprintf(stderr, "    %ls\n", walk_lines.at(idx).c_str());
     }
 }
 
@@ -1264,7 +1264,7 @@ static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_k
 
 static inline bool is_help_argument(const wcstring &txt)
 {
-    return contains(txt, L"-h", L"--help");
+    return contains(&txt, L"-h", L"--help");
 }
 
 /* Return a new parse token, advancing the tokenizer */

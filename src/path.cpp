@@ -20,19 +20,19 @@
 */
 #define MISSING_COMMAND_ERR_MSG _( L"Error while searching for command '%ls'" )
 
-static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const env_var_t &bin_path_var)
+static bool path_get_path_core(const wcstring * cmd, wcstring *out_path, const env_var_t &bin_path_var)
 {
     int err = ENOENT;
 
-    debug(3, L"path_get_path( '%ls' )", cmd.c_str());
+    debug(3, L"path_get_path( '%ls' )", cmd->c_str());
 
     /* If the command has a slash, it must be a full path */
-    if (cmd.find(L'/') != wcstring::npos)
+    if (cmd->find(L'/') != wcstring::npos)
     {
-        if (waccess(cmd, X_OK)==0)
+        if (waccess(*cmd, X_OK)==0)
         {
             struct stat buff;
-            if (wstat(cmd, &buff))
+            if (wstat(*cmd, &buff))
             {
                 return false;
             }
@@ -40,7 +40,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const en
             if (S_ISREG(buff.st_mode))
             {
                 if (out_path)
-                    out_path->assign(cmd);
+                    out_path->assign(*cmd);
                 return true;
             }
             else
@@ -51,7 +51,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const en
         }
         else
         {
-            return false;
+           return false;
         }
 
     }
@@ -80,7 +80,7 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const en
         {
             if (nxt_path.empty())
                 continue;
-            append_path_component(nxt_path, cmd);
+            append_path_component(nxt_path, *cmd);
             if (waccess(nxt_path, X_OK)==0)
             {
                 struct stat buff;
@@ -126,12 +126,12 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const en
     return false;
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path, const env_vars_snapshot_t &vars)
+bool path_get_path(const wcstring *cmd, wcstring *out_path, const env_vars_snapshot_t &vars)
 {
     return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
-bool path_get_path(const wcstring &cmd, wcstring *out_path)
+bool path_get_path(const wcstring *cmd, wcstring *out_path)
 {
     return path_get_path_core(cmd, out_path, env_get_string(L"PATH"));
 }

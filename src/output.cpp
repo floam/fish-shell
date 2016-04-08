@@ -89,7 +89,7 @@ unsigned char index_for_color(rgb_color_t c)
 }
 
 
-static bool write_color_escape(char *todo, unsigned char idx, bool is_fg)
+static bool write_color_escape(const char *todo, unsigned char idx, bool is_fg)
 {
     bool result = false;
     if (idx < 16 || term256_support_is_native())
@@ -572,7 +572,7 @@ const wchar_t *output_get_term()
     return current_term.empty() ? L"<unknown>" : current_term.c_str();
 }
 
-void writembs_check(char *mbs, const char *mbs_name, const char *file, long line)
+void writembs_check(const char *mbs, const char *mbs_name, const char *file, long line)
 {
     if (mbs != NULL)
     {

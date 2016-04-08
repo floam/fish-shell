@@ -945,7 +945,7 @@ static bool append_syntax_error(parse_error_list_t *errors, size_t source_locati
 */
 static int parser_is_pipe_forbidden(const wcstring &word)
 {
-    return contains(word,
+    return contains(&word,
                     L"exec",
                     L"case",
                     L"break",

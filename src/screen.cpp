@@ -151,7 +151,7 @@ size_t escape_code_length(const wchar_t *code)
          Detect these terminfo color escapes with parameter
          value 0..7, all of which don't move the cursor
          */
-        char * const esc[] =
+        const char * const esc[] =
         {
             set_a_foreground,
             set_a_background,
@@ -183,7 +183,7 @@ size_t escape_code_length(const wchar_t *code)
          Detect these semi-common terminfo escapes without any
          parameter values, all of which don't move the cursor
          */
-        char * const esc2[] =
+        const char * const esc2[] =
         {
             enter_bold_mode,
             exit_attribute_mode,
@@ -613,7 +613,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
     int i;
     int x_steps, y_steps;
 
-    char *str;
+    const char *str;
     /*
       debug( 0, L"move from %d %d to %d %d",
       s->screen_cursor[0], s->screen_cursor[1],
@@ -659,7 +659,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
         x_steps = 0;
     }
 
-    char *multi_str = NULL;
+    const char *multi_str = NULL;
     if (x_steps < 0)
     {
         str = cursor_left;
@@ -730,7 +730,7 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c)
    Send the specified string through tputs and append the output to
    the specified buffer.
 */
-static void s_write_mbs(data_buffer_t *b, char *s)
+static void s_write_mbs(data_buffer_t *b, const char *s)
 {
     scoped_buffer_t scoped_buffer(b);
     writembs(s);

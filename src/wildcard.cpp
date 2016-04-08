@@ -929,7 +929,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
     while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str))
     {
         /* Don't bother with . and .. */
-        if (contains(name_str, L".", L".."))
+        if (contains(&name_str, L".", L".."))
         {
             continue;
         }

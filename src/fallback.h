@@ -26,13 +26,14 @@ int fish_wcswidth(const wchar_t *str, size_t n);
 /**
    Make sure __func__ is defined to some string. In C99, this should
    be the currently compiled function. If we aren't using C99 or
-   later, older versions of GCC had __FUNCTION__.
+   later, older versions of GCC had __FUNCTION__. Don't redefine if
+   __STDC_VERSION__ is defined, - it could be C++11.
 */
-#if __STDC_VERSION__ < 199901L
+#if __STDC_VERSION__ < 199901L && defined (__STDC_VERSION__)
 # if __GNUC__ >= 2
-#  define __func__ __FUNCTION__
+#     define __func__ __FUNCTION__
 # else
-#  define __func__ "<unknown>"
+#   define __func__ "<unknown>"
 # endif
 #endif
 
@@ -43,7 +44,7 @@ int fish_wcswidth(const wchar_t *str, size_t n);
    expects. Hopefully.
 */
 
-#ifdef NCURSES_VERSION
+#if defined(__NetBSD__) || defined(NCURSES_VERSION)
 typedef int tputs_arg_t;
 #else
 typedef char tputs_arg_t;
@@ -86,7 +87,10 @@ int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t));
 
 #endif
 
-#ifdef TPARM_SOLARIS_KLUDGE
+#ifdef __NetBSD__
+#include <term.h>
+#define tparm tiparm
+#elif defined(TPARM_SOLARIS_KLUDGE)
 
 /**
    Solaris tparm has a set fixed of paramters in it's curses implementation,

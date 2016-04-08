@@ -224,11 +224,11 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
              the rest won't fit
              */
             
-            int screen_height, lines;
+            int screen_height, total_lines;
             
             screen_height = common_get_height();
-            lines = count_char(str, L'\n');
-            if (! get_is_interactive() || (lines > 2*screen_height/3))
+            total_lines = count_char(str, L'\n');
+            if (! get_is_interactive() || (total_lines > 2*screen_height/3))
             {
                 wchar_t *pos;
                 int cut=0;
@@ -1171,11 +1171,11 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
 
     for (int idx = w.woptind; argv[idx]; ++idx)
     {
-        const wchar_t *command_name = argv[idx];
+        const wchar_t * const command_name = argv[idx];
         wcstring path;
         if (path_get_path(command_name, &path))
         {
-            streams.out.append_format( L"%ls\n", path.c_str());
+            streams.out.append_format(L"%ls\n", path->c_str());
             ++found;
         }
     }
