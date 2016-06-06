@@ -51,7 +51,7 @@ enum {
 void set_color(rgb_color_t c, rgb_color_t c2);
 
 /// Write specified multibyte string.
-void writembs_check(char *mbs, const char *mbs_name, const char *file, long line);
+void writembs_check(const char *mbs, const char *mbs_name, const char *file, long line);
 #define writembs(mbs) writembs_check((mbs), #mbs, __FILE__, __LINE__)
 
 /// Write a wide character using the output method specified using output_set_writer().

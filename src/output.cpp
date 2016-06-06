@@ -60,7 +60,7 @@ unsigned char index_for_color(rgb_color_t c) {
     return c.to_term256_index();
 }
 
-static bool write_color_escape(char *todo, unsigned char idx, bool is_fg) {
+static bool write_color_escape(const char *todo, unsigned char idx, bool is_fg) {
     bool result = false;
     if (idx < 16 || term256_support_is_native()) {
         // Use tparm.
@@ -414,7 +414,7 @@ rgb_color_t parse_color(const wcstring &val, bool is_background) {
     return result;
 }
 
-void writembs_check(char *mbs, const char *mbs_name, const char *file, long line) {
+void writembs_check(const char *mbs, const char *mbs_name, const char *file, long line) {
     if (mbs != NULL) {
         tputs(mbs, 1, &writeb);
     } else {

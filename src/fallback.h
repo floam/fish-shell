@@ -31,7 +31,7 @@ int fish_wcswidth(const wchar_t *str, size_t n);
 /// Under curses, tputs expects an int (*func)(char) as its last parameter, but in ncurses, tputs
 /// expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs
 /// expects. Hopefully.
-#ifdef NCURSES_VERSION
+#if defined(__NetBSD__) || defined(NCURSES_VERSION)
 typedef int tputs_arg_t;
 #else
 typedef char tputs_arg_t;
@@ -45,10 +45,12 @@ struct winsize {
     /// Number of columns.
     unsigned short ws_col;
 };
-
 #endif
 
-#ifdef TPARM_SOLARIS_KLUDGE
+#ifdef __NetBSD__
+#include <term.h>
+#define tparm tiparm
+#elif defined(TPARM_SOLARIS_KLUDGE)
 /// Solaris tparm has a set fixed of paramters in it's curses implementation, work around this here.
 #define tparm tparm_solaris_kludge
 char *tparm_solaris_kludge(char *str, ...);

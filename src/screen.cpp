@@ -88,6 +88,7 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
 
 /// Returns the number of columns left until the next tab stop, given the current cursor postion.
 static size_t next_tab_stop(size_t current_line_width) {
+
     // Assume tab stops every 8 characters if undefined.
     size_t tab_width = init_tabs > 0 ? (size_t)init_tabs : 8;
     return ((current_line_width / tab_width) + 1) * tab_width;
@@ -207,7 +208,7 @@ size_t escape_code_length(const wchar_t *code) {
     if (cur_term != NULL) {
         // Detect these terminfo color escapes with parameter value 0..7, all of which don't move
         // the cursor.
-        char *const esc[] = {
+        const char *const esc[] = {
             set_a_foreground, set_a_background, set_foreground, set_background,
         };
 
@@ -228,7 +229,7 @@ size_t escape_code_length(const wchar_t *code) {
     if (cur_term != NULL) {
         // Detect these semi-common terminfo escapes without any parameter values, all of which
         // don't move the cursor.
-        char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
+        const char *const esc2[] = {enter_bold_mode,        exit_attribute_mode,   enter_underline_mode,
                               exit_underline_mode,    enter_standout_mode,   exit_standout_mode,
                               flash_screen,           enter_subscript_mode,  exit_subscript_mode,
                               enter_superscript_mode, exit_superscript_mode, enter_blink_mode,
@@ -460,7 +461,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
     int i;
     int x_steps, y_steps;
 
-    char *str;
+    const char *str;
     /*
       debug( 0, L"move from %d %d to %d %d",
       s->screen_cursor[0], s->screen_cursor[1],
@@ -494,7 +495,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
         x_steps = 0;
     }
 
-    char *multi_str = NULL;
+    const char *multi_str = NULL;
     if (x_steps < 0) {
         str = cursor_left;
         multi_str = parm_left_cursor;
@@ -547,7 +548,7 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c) {
 }
 
 /// Send the specified string through tputs and append the output to the specified buffer.
-static void s_write_mbs(data_buffer_t *b, char *s) {
+static void s_write_mbs(data_buffer_t *b, const char *s) {
     scoped_buffer_t scoped_buffer(b);  //!OCLINT(has side effects)
     writembs(s);
 }

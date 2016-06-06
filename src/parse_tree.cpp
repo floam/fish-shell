@@ -81,9 +81,9 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
         // the string; otherwise start one past the newline. Note that source_start may itself point
         // at a newline; we want to find the newline before it.
         if (source_start > 0) {
-            size_t newline = src.find_last_of(L'\n', source_start - 1);
-            if (newline != wcstring::npos) {
-                line_start = newline + 1;
+            size_t found_newline = src.find_last_of(L'\n', source_start - 1);
+            if (found_newline != wcstring::npos) {
+                line_start = found_newline + 1;
             }
         }
 
