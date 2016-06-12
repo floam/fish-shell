@@ -653,7 +653,7 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
             return STATUS_BUILTIN_ERROR;
         }
 
-        if (parser.global_event_blocks.empty()) {
+        else if (parser.global_event_blocks.empty()) {
             streams.err.append_format(_(L"%ls: No blocks defined\n"), argv[0]);
             return STATUS_BUILTIN_ERROR;
         }
@@ -666,24 +666,21 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
         eb.typemask = (1 << EVENT_ANY);
 
         switch (scope) {
-            case LOCAL: {
+            case LOCAL:
                 // If this is the outermost block, then we're global
-                if (block_idx + 1 >= parser.block_count()) {
-                    block = NULL;
-                }
+                if (block_idx + 1 >= parser.block_count()) { block = NULL; }
                 break;
-            }
-            case GLOBAL: {
+            case GLOBAL:
                 block = NULL;
-            }
-            case UNSET: {
+            case UNSET:
                 while (block != NULL && block->type() != FUNCTION_CALL &&
                        block->type() != FUNCTION_CALL_NO_SHADOW) {
                     // Set it in function scope
                     block = parser.block_at_index(++block_idx);
                 }
-            }
+                break;
         }
+        
         if (block) {
             block->event_blocks.push_front(eb);
         } else {
@@ -961,7 +958,7 @@ static wcstring functions_def(const wcstring &name) {
 
     wcstring_list_t named = function_get_named_arguments(name);
     if (!named.empty()) {
-        append_format(out, L" --argument");
+        out.append(L" --argument");
         for (size_t i = 0; i < named.size(); i++) {
             append_format(out, L" %ls", named.at(i).c_str());
         }
@@ -1007,7 +1004,6 @@ static wcstring functions_def(const wcstring &name) {
 /// The functions builtin, used for listing and erasing functions.
 static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
-    int i;
     int erase = 0;
     wchar_t *desc = 0;
 
@@ -1083,8 +1079,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
     }
 
     if (erase) {
-        int i;
-        for (i = w.woptind; i < argc; i++) function_remove(argv[i]);
+        for (int i = w.woptind; i < argc; i++) function_remove(argv[i]);
         return STATUS_BUILTIN_OK;
     } else if (desc) {
         wchar_t *func;
@@ -1152,7 +1147,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             return STATUS_BUILTIN_ERROR;
         }
 
-        if ((wcsfuncname(new_func) != 0) || parser_keywords_is_reserved(new_func)) {
+        else if ((wcsfuncname(new_func) != 0) || parser_keywords_is_reserved(new_func)) {
             streams.err.append_format(_(L"%ls: Illegal function name '%ls'\n"), argv[0],
                                       new_func.c_str());
             builtin_print_help(parser, streams, argv[0], streams.err);
@@ -1160,7 +1155,7 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
         }
 
         // Keep things simple: don't allow existing names to be copy targets.
-        if (function_exists(new_func)) {
+        else if (function_exists(new_func)) {
             streams.err.append_format(
                 _(L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"), argv[0],
                 new_func.c_str(), current_func.c_str());
@@ -1169,19 +1164,17 @@ static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **
             return STATUS_BUILTIN_ERROR;
         }
 
-        if (function_copy(current_func, new_func)) return STATUS_BUILTIN_OK;
+        else if (function_copy(current_func, new_func))
+            return STATUS_BUILTIN_OK;
         return STATUS_BUILTIN_ERROR;
     }
 
-    for (i = w.woptind; i < argc; i++) {
+    for (int i = w.woptind; i < argc; i++) {
         if (!function_exists(argv[i]))
             res++;
-        else {
-            if (!query) {
-                if (i != w.woptind) streams.out.append(L"\n");
-
-                streams.out.append(functions_def(argv[i]));
-            }
+        else if (!query) {
+            if (i != w.woptind) streams.out.append(L"\n");
+            streams.out.append(functions_def(argv[i]));
         }
     }
 
@@ -1560,7 +1553,6 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
             }
             case 'j':
             case 'p': {
-                pid_t pid;
                 wchar_t *end;
                 event_t e(EVENT_ANY);
 
@@ -1594,7 +1586,7 @@ int builtin_function(parser_t &parser, io_streams_t &streams, const wcstring_lis
                     }
                 } else {
                     errno = 0;
-                    pid = fish_wcstoi(w.woptarg, &end, 10);
+                    pid_t pid = fish_wcstoi(w.woptarg, &end, 10);
                     if (errno || !end || *end) {
                         append_format(*out_err, _(L"%ls: Invalid process id %ls"), argv[0],
                                       w.woptarg);
@@ -1845,7 +1837,6 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     const wchar_t *prompt = DEFAULT_READ_PROMPT;
     const wchar_t *right_prompt = L"";
     const wchar_t *commandline = L"";
-    int exit_res = STATUS_BUILTIN_OK;
     const wchar_t *mode_name = READ_MODE_NAME;
     int nchars = 0;
     wchar_t *end;
@@ -1970,8 +1961,8 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         return STATUS_BUILTIN_ERROR;
     }
 
-    if ((place & ENV_LOCAL ? 1 : 0) + (place & ENV_GLOBAL ? 1 : 0) +
-            (place & ENV_UNIVERSAL ? 1 : 0) >
+    if (((place & ENV_LOCAL) ? 1 : 0) + ((place & ENV_GLOBAL) ? 1 : 0) +
+            ((place & ENV_UNIVERSAL) ? 1 : 0) >
         1) {
         streams.err.append_format(BUILTIN_ERR_GLOCAL, argv[0]);
         builtin_print_help(parser, streams, argv[0], streams.err);
@@ -2032,7 +2023,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         line = reader_readline(nchars);
         proc_pop_interactive();
         if (line) {
-            if (0 < nchars && nchars < wcslen(line)) {
+            if (nchars > 0 && wcslen(line) > nchars) {
                 // Line may be longer than nchars if a keybinding used `commandline -i`
                 // note: we're deliberately throwing away the tail of the commandline.
                 // It shouldn't be unread because it was produced with `commandline -i`,
@@ -2042,9 +2033,11 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 buff = wcstring(line);
             }
         } else {
-            exit_res = STATUS_BUILTIN_ERROR;
+            reader_pop();
+            return STATUS_BUILTIN_ERROR;
         }
         reader_pop();
+
     } else {
         int eof = 0;
 
@@ -2098,11 +2091,11 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         }
 
         if (buff.empty() && eof) {
-            exit_res = 1;
+            return 1;
         }
     }
 
-    if (i != argc && !exit_res) {
+    if (i != argc) {
         env_var_t ifs = env_get_string(L"IFS");
         if (ifs.missing_or_empty()) {
             // Every character is a separate token.
@@ -2147,17 +2140,15 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         } else {
             wcstring_range loc = wcstring_range(0, 0);
 
-            while (i < argc) {
+            for (; i < argc; i++) {
                 loc = wcstring_tok(buff, (i + 1 < argc) ? ifs : wcstring(), loc);
                 env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first],
                         place);
-
-                ++i;
             }
         }
     }
 
-    return exit_res;
+    return STATUS_BUILTIN_OK;
 }
 
 /// The status builtin. Gives various status information on fish.
@@ -2888,13 +2879,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             case 'h': {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_BUILTIN_OK;
-                break;
             }
-            case '?': {
-                streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0], argv[w.woptind - 1]);
-                return STATUS_BUILTIN_ERROR;
-                break;
-            }
+            case '?':
             default: {
                 streams.err.append_format(BUILTIN_ERR_UNKNOWN, argv[0], argv[w.woptind - 1]);
                 return STATUS_BUILTIN_ERROR;
@@ -3148,13 +3134,11 @@ int builtin_run(parser_t &parser, const wchar_t *const *argv, io_streams_t &stre
     cmd = (int (*)(parser_t & parser, io_streams_t & streams, const wchar_t *const *))(
         data ? data->func : NULL);
 
-    if (argv[1] != 0 && !internal_help(argv[0])) {
-        if (argv[2] == 0 && (parse_util_argument_is_help(argv[1], 0))) {
-            builtin_print_help(parser, streams, argv[0], streams.out);
-            return STATUS_BUILTIN_OK;
-        }
+    if (argv[1] != 0 && argv[2] == 0 && !internal_help(argv[0]) &&
+        parse_util_argument_is_help(argv[1], 0)) {
+        builtin_print_help(parser, streams, argv[0], streams.out);
+        return STATUS_BUILTIN_OK;
     }
-
     if (data != NULL) {
         return cmd(parser, streams, argv);
     }

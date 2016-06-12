@@ -100,7 +100,7 @@ static bool write_background_color(unsigned char idx) {
 }
 
 void write_color(rgb_color_t color, bool is_fg) {
-    bool supports_term24bit = !!(output_get_color_support() & color_support_term24bit);
+    bool supports_term24bit = (output_get_color_support() & color_support_term24bit);
     if (!supports_term24bit || !color.is_rgb()) {
         // Indexed or non-24 bit color.
         unsigned char idx = index_for_color(color);
@@ -236,10 +236,8 @@ void set_color(rgb_color_t c, rgb_color_t c2) {
 
     // Lastly, we set bold mode and underline mode correctly.
     if ((enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set) {
-        if (is_bold && !was_bold) {
-            if (enter_bold_mode) {
-                writembs(tparm(enter_bold_mode));
-            }
+        if (is_bold && !was_bold && enter_bold_mode) {
+            writembs(tparm(enter_bold_mode));
         }
         was_bold = is_bold;
     }
@@ -346,7 +344,7 @@ rgb_color_t best_color(const std::vector<rgb_color_t> &candidates, color_support
     }
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
     rgb_color_t result = rgb_color_t::none();
-    bool has_term256 = !!(support & color_support_term256);
+    bool has_term256 = (support & color_support_term256);
     if ((!first_rgb.is_none() && has_term256) || first_named.is_none()) {
         result = first_rgb;
     } else {

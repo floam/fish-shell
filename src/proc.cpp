@@ -559,7 +559,7 @@ int job_reap(bool interactive) {
                             (WIFSIGNALED(s) ? -1 : WEXITSTATUS(s)));
 
             if (WIFSIGNALED(s)) {
-                // Ignore signal SIGPIPE.We issue it ourselves to the pipe writer when the pipe
+                // Ignore signal SIGPIPE. We issue it ourselves to the pipe writer when the pipe
                 // reader dies.
                 if (WTERMSIG(s) != SIGPIPE) {
                     int proc_is_job = ((p == j->first_process) && (p->next == 0));

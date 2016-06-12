@@ -109,91 +109,93 @@ static bool is_hex_digit(wchar_t c) {
 
 static int hex_to_bin(const wchar_t &c) {
     switch (c) {
-        case L'0': {
+        case L'0':
             return 0;
-        }
-        case L'1': {
+
+        case L'1':
             return 1;
-        }
-        case L'2': {
+
+        case L'2':
             return 2;
-        }
-        case L'3': {
+
+        case L'3':
             return 3;
-        }
-        case L'4': {
+
+        case L'4':
             return 4;
-        }
-        case L'5': {
+
+        case L'5':
             return 5;
-        }
-        case L'6': {
+
+        case L'6':
             return 6;
-        }
-        case L'7': {
+
+        case L'7':
             return 7;
-        }
-        case L'8': {
+
+        case L'8':
             return 8;
-        }
-        case L'9': {
+
+        case L'9':
             return 9;
-        }
+
         case L'a':
-        case L'A': {
+        case L'A':
             return 10;
-        }
+
         case L'b':
-        case L'B': {
+        case L'B':
             return 11;
-        }
+
         case L'c':
-        case L'C': {
+        case L'C':
             return 12;
-        }
+
         case L'd':
-        case L'D': {
+        case L'D':
             return 13;
-        }
+
         case L'e':
-        case L'E': {
+        case L'E':
             return 14;
-        }
+
         case L'f':
-        case L'F': {
+        case L'F':
             return 15;
-        }
-        default: { return -1; }
+
+        default:
+            return -1;
     }
 }
 
 static int octal_to_bin(wchar_t c) {
     switch (c) {
-        case L'0': {
+        case L'0':
             return 0;
-        }
-        case L'1': {
+
+        case L'1':
             return 1;
-        }
-        case L'2': {
+
+        case L'2':
             return 2;
-        }
-        case L'3': {
+
+        case L'3':
             return 3;
-        }
-        case L'4': {
+
+        case L'4':
             return 4;
-        }
-        case L'5': {
+
+        case L'5':
             return 5;
-        }
-        case L'6': {
+
+        case L'6':
             return 6;
-        }
-        case L'7': {
+
+        case L'7':
             return 7;
-        }
-        default: { return -1; }
+
+        default:
+            return -1;
     }
 }
 
@@ -291,46 +293,45 @@ static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state) 
 /// Output a single-character \ escape.
 void builtin_printf_state_t::print_esc_char(wchar_t c) {
     switch (c) {
-        case L'a': {  // alert
+        case L'a':  // alert
             this->append_output(L'\a');
             break;
-        }
-        case L'b': {  // backspace
+
+        case L'b':  // backspace
             this->append_output(L'\b');
             break;
-        }
-        case L'c': {  // cancel the rest of the output
+
+        case L'c':  // cancel the rest of the output
             this->early_exit = true;
             break;
-        }
-        case L'e': {  // escape
+
+        case L'e':  // escape
             this->append_output(L'\x1B');
             break;
-        }
-        case L'f': {  // form feed
+
+        case L'f':  // form feed
             this->append_output(L'\f');
             break;
-        }
-        case L'n': {  // new line
+
+        case L'n':  // new line
             this->append_output(L'\n');
             break;
-        }
-        case L'r': {  // carriage return
+
+        case L'r':  // carriage return
             this->append_output(L'\r');
             break;
-        }
-        case L't': {  // horizontal tab
+
+        case L't':  // horizontal tab
             this->append_output(L'\t');
             break;
-        }
-        case L'v': {  // vertical tab
+
+        case L'v':  // vertical tab
             this->append_output(L'\v');
             break;
-        }
-        default: {
+
+        default:
             this->append_output(c);
             break;
-        }
     }
 }
 
@@ -584,27 +585,28 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 for (;; f++, direc_length++) {
                     switch (*f) {
                         case L'I':
-                        case L'\'': {
+                        case L'\'':
                             modify_allowed_format_specifiers(ok, "aAceEosxX", false);
-                            break;
-                        }
+                            continue;
+
                         case '-':
                         case '+':
-                        case ' ': {
-                            break;
-                        }
-                        case L'#': {
+                        case ' ':
+                            continue;
+
+                        case L'#':
                             modify_allowed_format_specifiers(ok, "cdisu", false);
-                            break;
-                        }
-                        case '0': {
+                            continue;
+
+                        case '0':
                             modify_allowed_format_specifiers(ok, "cs", false);
+                            continue;
+
+                        default:
                             break;
-                        }
-                        default: { goto no_more_flag_characters; }
                     }
+                    break;  // default
                 }
-            no_more_flag_characters:;
 
                 if (*f == L'*') {
                     ++f;
