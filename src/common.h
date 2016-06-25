@@ -31,7 +31,7 @@
 /// work with type names containing commas!
 #define CAST_INIT(type, dst, src) type dst = static_cast<type>(src)
 
-// Common string type.
+/// Common string type.
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;
 

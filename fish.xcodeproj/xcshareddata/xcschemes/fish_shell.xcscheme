@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-               BuildableName = "fish.app"
-               BlueprintName = "fish.app"
+               BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+               BuildableName = "fish"
+               BlueprintName = "fish_shell"
                ReferencedContainer = "container:fish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-            BuildableName = "fish.app"
-            BlueprintName = "fish.app"
+            BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+            BuildableName = "fish"
+            BlueprintName = "fish_shell"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -55,9 +55,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-            BuildableName = "fish.app"
-            BlueprintName = "fish.app"
+            BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+            BuildableName = "fish"
+            BlueprintName = "fish_shell"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -74,9 +74,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0D02A9915985A75008E62BD"
-            BuildableName = "fish.app"
-            BlueprintName = "fish.app"
+            BlueprintIdentifier = "D0D2693B159835CA005D9B9C"
+            BuildableName = "fish"
+            BlueprintName = "fish_shell"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

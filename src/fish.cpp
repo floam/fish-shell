@@ -64,12 +64,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 /// If we are doing profiling, the filename to output to.
 static const char *s_profiling_output_filename = NULL;
 
-static bool has_suffix(const std::string &path, const char *suffix, bool ignore_case) {
-    size_t pathlen = path.size(), suffixlen = strlen(suffix);
-    return pathlen >= suffixlen &&
-           !(ignore_case ? strcasecmp : strcmp)(path.c_str() + pathlen - suffixlen, suffix);
-}
-
 /// Modifies the given path by calling realpath. Returns true if realpath succeeded, false
 /// otherwise.
 static bool get_realpath(std::string &path) {
@@ -120,28 +114,29 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path)) {
-#if __APPLE__
+        wcstring base_path = str2wcstring(exec_path);
 
+#if __APPLE__
         // On OS X, maybe we're an app bundle, and should use the bundle's files. Since we don't
         // link CF, use this lame approach to test it: see if the resolved path ends with
-        // /Contents/MacOS/fish, case insensitive since HFS+ usually is.
+        // "Contents/MacOS/fish"
+
         if (!done) {
-            const char *suffix = "/Contents/MacOS/fish";
-            const size_t suffixlen = strlen(suffix);
-            if (has_suffix(exec_path, suffix, true)) {
+            wcstring suffix = L"/Contents/MacOS/fish";
+
+            if (string_suffixes_string(base_path, suffix)) {
                 // Looks like we're a bundle. Cut the string at the / prefixing /Contents... and
                 // then the rest.
-                wcstring wide_resolved_path = str2wcstring(exec_path);
-                wide_resolved_path.resize(exec_path.size() - suffixlen);
-                wide_resolved_path.append(L"/Contents/Resources/");
+                base_path.resize(exec_path.size() - suffix.size());
+                base_path.append(L"./Contents/Resources/");
 
                 // Append share, etc, doc.
-                paths.data = wide_resolved_path + L"share/fish";
-                paths.sysconf = wide_resolved_path + L"etc/fish";
-                paths.doc = wide_resolved_path + L"doc/fish";
+                paths.data = base_path + L"share/fish";
+                paths.sysconf = base_path + L"etc/fish";
+                paths.doc = base_path + L"doc/fish";
 
                 // But the bin_dir is the resolved_path, minus fish (aka the MacOS directory).
-                paths.bin = str2wcstring(exec_path);
+                paths.bin = base_path;
                 paths.bin.resize(paths.bin.size() - strlen("/fish"));
 
                 done = true;
@@ -154,10 +149,9 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             //   bin/fish
             //   etc/fish
             //   share/fish
-            const char *suffix = "/bin/fish";
-            if (has_suffix(exec_path, suffix, false)) {
-                wcstring base_path = str2wcstring(exec_path);
-                base_path.resize(base_path.size() - strlen(suffix));
+            wcstring suffix = L"/bin/fish";
+            if (string_suffixes_string(base_path, suffix)) {
+                exec_path.resize(exec_path.size() - suffix.size());
 
                 paths.data = base_path + L"/share/fish";
                 paths.sysconf = base_path + L"/etc/fish";
@@ -410,12 +404,16 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 /// routines.
 static void misc_init() {
 #ifdef OS_IS_CYGWIN
-    if (cmdfile) fclose(cmdfile)
-    // MS Windows tty devices do not currently have either a read or write timestamp. Those respective fields
-    // of `struct stat` are always the current time. Which means we can't use them. So we assume no
-    // external program has written to the terminal behind our back. This makes multiline prompts
-    // usable. See issue #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
-    has_working_tty_timestamps = false;
+    if (cmdfile)
+        fclose(cmdfile)
+            // MS Windows tty devices do not currently have either a read or write timestamp. Those
+            // respective fields
+            // of `struct stat` are always the current time. Which means we can't use them. So we
+            // assume no
+            // external program has written to the terminal behind our back. This makes multiline
+            // prompts
+            // usable. See issue #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
+            has_working_tty_timestamps = false;
 #else
     // This covers preview builds of Windows Subsystem for Linux (WSL).
     FILE *procsyskosrel;
@@ -426,7 +424,9 @@ static void misc_init() {
             has_working_tty_timestamps = false;
         }
     }
-    if (procsyskosrel) { fclose(procsyskosrel); }
+    if (procsyskosrel) {
+        fclose(procsyskosrel);
+    }
 #endif  // OS_IS_MS_WINDOWS
 }
 

@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0A084F713B3AC130099B651"
-               BuildableName = "Makefile"
-               BlueprintName = "Makefile"
+               BlueprintIdentifier = "D008D0C41BC58F8800841177"
+               BuildableName = "generate-version-header"
+               BlueprintName = "generate-version-header"
                ReferencedContainer = "container:fish.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,9 +45,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0A084F713B3AC130099B651"
-            BuildableName = "Makefile"
-            BlueprintName = "Makefile"
+            BlueprintIdentifier = "D008D0C41BC58F8800841177"
+            BuildableName = "generate-version-header"
+            BlueprintName = "generate-version-header"
             ReferencedContainer = "container:fish.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -60,6 +60,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D008D0C41BC58F8800841177"
+            BuildableName = "generate-version-header"
+            BlueprintName = "generate-version-header"
+            ReferencedContainer = "container:fish.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

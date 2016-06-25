@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -56,7 +56,6 @@
 				D01A2C9B16964C8200767098 /* Copy Files */,
 			);
 			dependencies = (
-				D0F01A1315AA36280034B3B1 /* PBXTargetDependency */,
 				D0F01A1715AA36300034B3B1 /* PBXTargetDependency */,
 				D0A564EF168D09C000AF6161 /* PBXTargetDependency */,
 			);
@@ -67,6 +66,8 @@
 
 /* Begin PBXBuildFile section */
 		63A2C0E91CC60F3B00973404 /* pcre2_find_bracket.c in Sources */ = {isa = PBXBuildFile; fileRef = 63A2C0E81CC5F9FB00973404 /* pcre2_find_bracket.c */; };
+		9CBB6CDB1D1E38B600FDA94C /* fish_indent in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02AD01598642A008E62BD /* fish_indent */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		9CBB6CDD1D1E395E00FDA94C /* fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D2693C159835CA005D9B9C /* fish */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		D00769121990137800CA4627 /* autoload.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */; };
 		D00769131990137800CA4627 /* builtin_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */; };
 		D00769141990137800CA4627 /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B6B0FE14E88BA400AD6C10 /* color.cpp */; };
@@ -261,8 +262,6 @@
 		D0D02ADC159864D5008E62BD /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
 		D0D2694915983772005D9B9C /* function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854413B3ACEE0099B651 /* function.cpp */; };
 		D0D2694A15983779005D9B9C /* builtin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853513B3ACEE0099B651 /* builtin.cpp */; };
-		D0F019F115A977140034B3B1 /* fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D2693C159835CA005D9B9C /* fish */; };
-		D0F019F315A977290034B3B1 /* fish_indent in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02AD01598642A008E62BD /* fish_indent */; };
 		D0F019F815A977AB0034B3B1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
 		D0F019FD15A977CA0034B3B1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
 		D0F01A0315A978910034B3B1 /* osx_fish_launcher.m in Sources */ = {isa = PBXBuildFile; fileRef = D0D02AFA159871B2008E62BD /* osx_fish_launcher.m */; };
@@ -286,6 +285,13 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXContainerItemProxy section */
+		9CBB6CDE1D1E399E00FDA94C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D2693B159835CA005D9B9C;
+			remoteInfo = fish_shell;
+		};
 		D008D0CA1BC58FDD00841177 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
@@ -356,13 +362,6 @@
 			remoteGlobalIDString = D0A564E6168CFDD800AF6161;
 			remoteInfo = man_pages;
 		};
-		D0F01A1215AA36280034B3B1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D0D2693B159835CA005D9B9C;
-			remoteInfo = fish_shell;
-		};
 		D0F01A1615AA36300034B3B1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
@@ -373,6 +372,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		9CBB6CD11D1E362000FDA94C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				9CBB6CDD1D1E395E00FDA94C /* fish in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D01A2C9B16964C8200767098 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -434,12 +443,11 @@
 		};
 		D0F019F015A977010034B3B1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			dstPath = base/bin;
 			dstSubfolderSpec = 1;
 			files = (
-				D0F019F115A977140034B3B1 /* fish in CopyFiles */,
-				D0F019F315A977290034B3B1 /* fish_indent in CopyFiles */,
+				9CBB6CDB1D1E38B600FDA94C /* fish_indent in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -948,10 +956,12 @@
 				D0F01A0215A9788B0034B3B1 /* Sources */,
 				D0CBD585159EF09F0024809C /* Resources */,
 				D0F01A0415A9789C0034B3B1 /* Frameworks */,
+				9CBB6CD11D1E362000FDA94C /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9CBB6CDF1D1E399E00FDA94C /* PBXTargetDependency */,
 				D031890815E36CC000D9CC39 /* PBXTargetDependency */,
 			);
 			name = fish.app;
@@ -1000,6 +1010,9 @@
 		D0A084F213B3AC130099B651 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					New,
+				);
 				LastUpgradeCheck = 0730;
 				TargetAttributes = {
 					D008D0C41BC58F8800841177 = {
@@ -1011,7 +1024,7 @@
 				};
 			};
 			buildConfigurationList = D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "fish" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -1440,6 +1453,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		9CBB6CDF1D1E399E00FDA94C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D2693B159835CA005D9B9C /* fish_shell */;
+			targetProxy = 9CBB6CDE1D1E399E00FDA94C /* PBXContainerItemProxy */;
+		};
 		D008D0CB1BC58FDD00841177 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D008D0C41BC58F8800841177 /* generate-version-header */;
@@ -1489,11 +1507,6 @@
 			isa = PBXTargetDependency;
 			target = D0A564E6168CFDD800AF6161 /* man_pages */;
 			targetProxy = D0A564FF168D257900AF6161 /* PBXContainerItemProxy */;
-		};
-		D0F01A1315AA36280034B3B1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D0D2693B159835CA005D9B9C /* fish_shell */;
-			targetProxy = D0F01A1215AA36280034B3B1 /* PBXContainerItemProxy */;
 		};
 		D0F01A1715AA36300034B3B1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
