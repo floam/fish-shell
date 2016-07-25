@@ -10,6 +10,8 @@ set git_clang_format no
 set c_files
 set f_files
 set all no
+set cleanmark (set_color green)✓(set_color normal)
+set reformatmark (set_color bryellow)✖(set_color normal)
 
 if test "$argv[1]" = "--all"
     set all yes
@@ -22,14 +24,16 @@ if set -q argv[1]
 end
 
 if test $all = yes
-    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    set files (git status --porcelain --short --untracked-files=all | string replace -r '^ *[^ ]* *' '')
     if set -q files[1]
-        echo
-        echo You have uncommited changes. Cowardly refusing to restyle the entire code base.
-        echo
-        exit 1
+        echo "Cannot proceed with style-all."
+        echo "Commit or stash uncommited/untracked files:"
+        set_color normal
+        git status --porcelain --short --untracked-files=all 
+        exit 2
     end
-    set c_files src/*.h src/*.cpp
+    #set c_files {src,osx,build_tools,share}/{***.h,***.c,***.cpp,***.f,***.js}
+    set c_files set c_files src/*.h src/*.cpp
     set f_files share/***.fish
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
@@ -38,55 +42,50 @@ else
     set files (git diff-index --cached HEAD --name-only) (git ls-files --exclude-standard --others --modified)
     if set -q files[1]
         set git_clang_format yes
+        echo "Using git-clang-format"
     else
-        # No pending changes so lint the files in the most recent commit.
+        echo "No pending changes; reformatting files in most recent commit"
         set files (git diff-tree --no-commit-id --name-only -r HEAD)
     end
 
     # Extract just the C/C++ files that exist.
     set c_files
-    for file in (string match -r '^.*\.(?:c|cpp|h)$' -- $files)
-        test -f $file; and set c_files $c_files $file
+    for file in (string match -ri '^.*\.(?:c|cpp|h)$' -- $files)
+        test -f $file
+        and set c_files $c_files $file
     end
     # Extract just the fish files.
     set f_files (string match -r '^.*\.fish$' -- $files)
 end
 
-# Run the C++ reformatter if we have any C++ files.
+# Run the git-clang-format if we have any C++ files.
 if set -q c_files[1]
     if test $git_clang_format = yes
         if type -q git-clang-format
-            echo
-            echo ========================================
-            echo Running git-clang-format
-            echo ========================================
+            set_color --bold
+            echo \n- Running git-clang-format -\n
             git add $c_files
             git-clang-format
         else
-            echo
-            echo 'WARNING: Cannot find git-clang-format command'
-            echo
+            echo (set_color --bold)'Warning: git-clang-format not installed or not in $PATH.'(set_color normal)
+            echo "C++ reformatting skipped"
         end
     else if type -q clang-format
-        echo
-        echo ========================================
-        echo Running clang-format
-        echo ========================================
+        set_color --bold
+        echo \n- Running clang-format -\n
         for file in $c_files
             cp $file $file.new # preserves mode bits
             clang-format $file >$file.new
             if cmp --quiet $file $file.new
-                echo $file was correctly formatted
+                echo $cleanmark $file
                 rm $file.new
             else
-                echo $file was NOT correctly formatted
+                echo $reformatmark (set_color --underline)$file(set_color normal) is being reformatted
                 mv $file.new $file
             end
         end
     else
-        echo
-        echo 'WARNING: Cannot find clang-format command'
-        echo
+        echo 'Warning: Cannot find clang-format command'
     end
 end
 
@@ -96,18 +95,16 @@ if set -q f_files[1]
         make fish_indent
         set PATH . $PATH
     end
-    echo
-    echo ========================================
-    echo Running fish_indent
-    echo ========================================
+    set_color --bold
+    echo \n- Running fish_indent -\n
     for file in $f_files
         cp $file $file.new # preserves mode bits
         fish_indent <$file >$file.new
         if cmp --quiet $file $file.new
-            echo $file was correctly formatted
+            echo $cleanmark $file
             rm $file.new
         else
-            echo $file was NOT correctly formatted
+            echo $reformatmark (set_color --underline)$file(set_color normal) is being reformatted
             mv $file.new $file
         end
     end
