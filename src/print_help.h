@@ -1,8 +1,8 @@
-// Print help message for the specified command.
+/// Print help message for the specified command.
 #ifndef FISH_PRINT_HELP_H
 #define FISH_PRINT_HELP_H
+#include <string>
 
-/// Print help message for the specified command.
-void print_help(const char *cmd, int fd);
+void print_help(const std::string &cmd, int fd);
 
 #endif

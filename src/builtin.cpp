@@ -134,7 +134,8 @@ static int count_char(const wchar_t *str, wchar_t c) {
     return res;
 }
 
-wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t *name) {
+/// Returns result of execing __fish_print_help $name in a subshell
+wcstring builtin_help_get(const wchar_t *name) {
     // This won't ever work if no_exec is set.
     if (no_exec) return wcstring();
 
@@ -142,13 +143,8 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);
     wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (!streams.out_is_redirected && isatty(STDOUT_FILENO)) {
-        // since we're using a subshell, __fish_print_help can't tell we're in
-        // a terminal. Tell it ourselves.
-        int cols = common_get_width();
-        cmd = format_string(L"__fish_print_help --tty-width %d %ls", cols, name_esc.c_str());
-    }
-    if (exec_subshell(cmd, lst, false /* don't apply exit status */) >= 0) {
+
+    if (exec_subshell(cmd, lst, false) >= 0) {  // doesn't apply exit status
         for (size_t i = 0; i < lst.size(); i++) {
             out.append(lst.at(i));
             out.push_back(L'\n');
@@ -157,83 +153,51 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     return out;
 }
 
-/// Print help for the specified builtin. If \c b is sb_err, also print the line information.
-///
-/// If \c b is the buffer representing standard error, and the help message is about to be printed
+/// Print help for the specified builtin.
+/// \param b Output stream. If streams.err, print the line information, and if the help message is
+/// also about to be printed
 /// to an interactive screen, it may be shortened to fit the screen.
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
-                        output_stream_t &b) {
-    bool is_stderr = &b == &streams.err;
-    if (is_stderr) {
-        b.append(parser.current_line());
+                        output_stream_t &b_out) {
+    const wcstring h = builtin_help_get(cmd);
+
+    if (&b_out == &streams.err) {
+        b_out.append(parser.current_line());
     }
 
-    const wcstring h = builtin_help_get(parser, streams, cmd);
-
-    if (!h.size()) return;
+    if (h.size() == 0) return;
 
     wchar_t *str = wcsdup(h.c_str());
-    if (str) {
-        bool is_short = false;
-        if (is_stderr) {
-            // Interactive mode help to screen - only print synopsis if the rest won't fit.
-            int screen_height, lines;
 
-            screen_height = common_get_height();
-            lines = count_char(str, L'\n');
-            if (!shell_is_interactive() || (lines > 2 * screen_height / 3)) {
-                wchar_t *pos;
-                int cut = 0;
-                int i;
+    // Manpage help for builtins - print only the synopsis if the rest won't fit.
+    bool cramped = shell_is_interactive() && count_char(str, L'\n') > (2 * common_get_height() / 3);
 
-                is_short = true;
+    if (str && &b_out == &streams.err && cramped) {
+        wchar_t *pos = str;
 
-                // First move down 4 lines.
-                pos = str;
-                for (i = 0; (i < 4) && pos && *pos; i++) {
-                    pos = wcschr(pos + 1, L'\n');
-                }
+        // First move down 4 lines.
+        for (int i = 0; (i < 4) && pos && *pos; i++) {
+            pos = wcschr(pos + 1, L'\n');
+        }
 
-                if (pos && *pos) {
-                    // Then find the next empty line.
-                    for (; *pos; pos++) {
-                        if (*pos == L'\n') {
-                            wchar_t *pos2;
-                            int is_empty = 1;
-
-                            for (pos2 = pos + 1; *pos2; pos2++) {
-                                if (*pos2 == L'\n') break;
-
-                                if (*pos2 != L'\t' && *pos2 != L' ') {
-                                    is_empty = 0;
-                                    break;
-                                }
-                            }
-                            if (is_empty) {
-                                // And cut it.
-                                *(pos2 + 1) = L'\0';
-                                cut = 1;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // We did not find a good place to cut message to shorten it - so we make sure we
-                // don't print anything.
-                if (!cut) {
-                    *str = 0;
-                }
+        for (; pos && *pos == L'\n'; pos++) {
+            // Then find the next empty line.
+            for (wchar_t *pos2 = pos + 1; *pos2; pos2++) {
+                if (*pos2 == L'\n') {
+                    // And cut it.
+                    *(pos2 + 1) = L'\0';
+                    b_out.append(str);
+                    free(str);
+                    b_out.append_format(_(L"%ls: 'man %ls' for full documentation\n"), cmd, cmd);
+                    return;
+                } else if (*pos2 != L'\t' && *pos2 != L' ')
+                    break;
             }
         }
-
-        b.append(str);
-        if (is_short) {
-            b.append_format(_(L"%ls: Type 'help %ls' for related documentation\n\n"), cmd, cmd);
-        }
-
-        free(str);
+    } else {
+        b_out.append(str);
     }
+    free(str);
 }
 
 /// Perform error reporting for encounter with unknown option.
