@@ -1,48 +1,40 @@
 language: cpp
+cache: ccache
 dist: trusty
 sudo: required
 
 matrix:
   include:
+    - os: osx
+      osx_image: xcode8
+      before_install:
+        - brew outdated pcre2 || brew upgrade pcre2 # use system PCRE2
+      addons:
+        env:
+          - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address -lstdc++"
+          - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
     - os: linux
       compiler: gcc
       addons:
         apt:
           packages:
-            - bc
             - expect
-            - gettext
             - libncurses5-dev
     - os: linux
       compiler: clang
       addons:
         apt:
           packages:
-            - bc
             - expect
-            - gettext
             - libncurses5-dev
-        env:
-          - CXXFLAGS="-g -fno-omit-frame-pointer"
-
-    - os: osx
-      osx_image: xcode8
-      before_install:
-        - brew update
-        - brew outdated pcre2 || brew upgrade pcre2 # use system PCRE2
-        - brew outdated xctool || brew upgrade xctool # for xcode... soon.
-      addons:
-        env:
-          - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address -lstdc++"
-          - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
   fast_finish: true
 
 script:
-  - autoreconf
-  - ./configure --prefix=$HOME/prefix || cat config.log
-  - make -j2
-  - make install
-  - make test DESTDIR=$HOME/prefix/ SHOW_INTERACTIVE_LOG=1
+  - autoconf
+  - ./configure --cache-file=$HOME/.cache/config.cache || cat config.log
+  - make -j3
+  - sudo make install
+  - make test DESTDIR=$HOME/test/ SHOW_INTERACTIVE_LOG=1
   
 notifications:
   # Some items are encrypted so that notifications from other repositories
