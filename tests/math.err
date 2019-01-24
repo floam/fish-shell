@@ -34,3 +34,5 @@ math: Error: Result is infinite
 '2^999999'
 math: Error: Result is infinite
 '1 / 0'
+math: '-2' is not a valid scale value
+math: '100' is not a valid scale value

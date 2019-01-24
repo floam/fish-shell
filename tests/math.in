@@ -51,3 +51,5 @@ not math
 not math -s 12
 not math 2^999999
 not math 1 / 0
+not math -s -2 5.5/2
+not math -s 100 5.5/2

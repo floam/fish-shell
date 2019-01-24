@@ -19,8 +19,11 @@
 #include "wgetopt.h"
 #include "wutil.h"  // IWYU pragma: keep
 
-// The maximum number of points after the decimal that we'll print.
+// The default maximum number of points after the decimal that we'll print.
 static constexpr int kDefaultScale = 6;
+
+// The largest scale builtin math can accept. 15 corresponds to FLT_DIG for a double.
+static constexpr int kMaximumScale = 15;
 
 // The end of the range such that every integer is representable as a double.
 // i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
@@ -48,7 +51,7 @@ static int parse_cmd_opts(math_cmd_opts_t &opts, int *optind,  //!OCLINT(high nc
         switch (opt) {
             case 's': {
                 opts.scale = fish_wcstoi(w.woptarg);
-                if (errno || opts.scale < 0 || opts.scale > 15) {
+                if (errno || opts.scale < -1 || opts.scale > kMaximumScale) {
                     streams.err.append_format(_(L"%ls: '%ls' is not a valid scale value\n"), cmd,
                                               w.woptarg);
                     return STATUS_INVALID_ARGS;
@@ -148,7 +151,7 @@ static wcstring format_double(double v, const math_cmd_opts_t &opts) {
         return format_string(L"%.*f", opts.scale, v);
     }
 
-    wcstring ret = format_string(L"%.*f", opts.scale, v);
+    wcstring ret = format_string(L"%.*f", opts.scale == -1 ? kMaximumScale : opts.scale, v);
     // If we contain a decimal separator, trim trailing zeros after it, and then the separator
     // itself if there's nothing after it. Detect a decimal separator as a non-digit.
     const wchar_t *const digits = L"0123456789";
